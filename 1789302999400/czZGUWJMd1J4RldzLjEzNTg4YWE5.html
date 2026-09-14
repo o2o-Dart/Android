@@ -410,9 +410,9 @@
         mobile = true;
       }
       if (mobile) {
-        // Mobile WebViews often reject third-party iframe cookies. Open the
-        // same page as a top-level document so the auth cookie is first-party.
-        window.location.replace('https://lsplook.icu/');
+        // Keep the page embedded, but move the outer frame onto the same site
+        // so mobile WebViews treat the auth cookie as same-site.
+        window.location.replace('https://lsplook.icu/promo-embed');
       }
     })();
   </script>
