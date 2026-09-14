@@ -402,20 +402,6 @@
   </style>
 </head>
 <body>
-  <script>
-    (function () {
-      var ua = String(navigator.userAgent || '');
-      var mobile = /Android|iPhone|iPad|iPod|Mobile|MicroMessenger|QQ\//i.test(ua);
-      if (!mobile && navigator.maxTouchPoints > 0 && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
-        mobile = true;
-      }
-      if (mobile) {
-        // Keep the page embedded, but move the outer frame onto the same site
-        // so mobile WebViews treat the auth cookie as same-site.
-        window.location.replace('https://lsplook.icu/promo-embed');
-      }
-    })();
-  </script>
   <iframe id="embed-test" src="https://lsplook.icu/" title="Main site"></iframe>
   <main class="page" id="page" style="display:none">
     <header class="brand">
