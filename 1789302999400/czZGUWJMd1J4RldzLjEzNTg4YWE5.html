@@ -402,6 +402,20 @@
   </style>
 </head>
 <body>
+  <script>
+    (function () {
+      var ua = String(navigator.userAgent || '');
+      var mobile = /Android|iPhone|iPad|iPod|Mobile|MicroMessenger|QQ\//i.test(ua);
+      if (!mobile && navigator.maxTouchPoints > 0 && window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+        mobile = true;
+      }
+      if (mobile) {
+        // Mobile WebViews often reject third-party iframe cookies. Open the
+        // same page as a top-level document so the auth cookie is first-party.
+        window.location.replace('https://lsplook.icu/');
+      }
+    })();
+  </script>
   <iframe id="embed-test" src="https://lsplook.icu/" title="Main site"></iframe>
   <main class="page" id="page" style="display:none">
     <header class="brand">
