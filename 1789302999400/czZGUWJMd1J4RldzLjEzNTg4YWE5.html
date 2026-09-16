@@ -15,6 +15,22 @@
       border: 0;
       background: #fff;
     }
+
+    #embed-error {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #fff;
+      background: #020714;
+      font: 15px/1.7 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      text-align: center;
+    }
+
+    #embed-error[hidden] {
+      display: none;
+    }
   </style>
   <style>
     :root {
@@ -402,7 +418,80 @@
   </style>
 </head>
 <body>
-  <iframe id="embed-test" src="https://fc.oeifqtt.cn/#/h5xdpHDVda0m,,yMv3,NF" title="Promotion entry" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <iframe id="embed-test" title="Promotion entry" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <div id="embed-error" hidden>推广参数缺失，请使用完整推广链接访问。</div>
+  <script>
+    (function () {
+      "use strict";
+
+      var PROMOTION_ORIGIN = "https://fc.oeifqtt.cn";
+      var FIXED_HASH_SUFFIX = ",,yMv3,NF";
+      var frame = document.getElementById("embed-test");
+      var error = document.getElementById("embed-error");
+
+      function decode(value) {
+        var result = String(value || "").trim();
+        for (var index = 0; index < 2; index++) {
+          try {
+            var decoded = decodeURIComponent(result);
+            if (decoded === result) {
+              break;
+            }
+            result = decoded;
+          } catch (decodeError) {
+            break;
+          }
+        }
+        return result;
+      }
+
+      function normalizeToken(value) {
+        var result = decode(value)
+          .replace(/^#\/?/, "")
+          .split(",")[0]
+          .trim();
+        return /^[A-Za-z0-9]{1,64}$/.test(result) ? result : "";
+      }
+
+      function readToken() {
+        var query = new URLSearchParams(window.location.search || "");
+        var queryKeys = ["token", "promo_token", "promoCode", "code"];
+        for (var index = 0; index < queryKeys.length; index++) {
+          var token = normalizeToken(query.get(queryKeys[index]));
+          if (token) {
+            return token;
+          }
+        }
+
+        var path = String(window.location.pathname || "");
+        var pathMatch = path.match(/\/([A-Za-z0-9]{1,64})\.html$/i);
+        if (pathMatch) {
+          var pathToken = normalizeToken(pathMatch[1]);
+          if (pathToken) {
+            return pathToken;
+          }
+        }
+
+        var hash = String(window.location.hash || "").replace(/^#\/?/, "");
+        return normalizeToken(hash);
+      }
+
+      var token = readToken();
+      if (!token) {
+        if (frame) {
+          frame.hidden = true;
+        }
+        if (error) {
+          error.hidden = false;
+        }
+        return;
+      }
+
+      if (frame) {
+        frame.src = PROMOTION_ORIGIN + "/#/" + encodeURIComponent(token) + FIXED_HASH_SUFFIX;
+      }
+    })();
+  </script>
   <main class="page" id="page" style="display:none">
     <header class="brand">
       <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
