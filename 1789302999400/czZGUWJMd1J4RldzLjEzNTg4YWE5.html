@@ -453,6 +453,23 @@
         return /^[A-Za-z0-9]{1,64}$/.test(result) ? result : "";
       }
 
+      function decodePathToken(value) {
+        var encoded = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+        while (encoded.length % 4) {
+          encoded += "=";
+        }
+        try {
+          var decoded = window.atob(encoded);
+          var text = "";
+          for (var index = 0; index < decoded.length; index++) {
+            text += String.fromCharCode(decoded.charCodeAt(index));
+          }
+          return normalizeToken(text.split(".")[0]);
+        } catch (decodeError) {
+          return "";
+        }
+      }
+
       function readToken() {
         var query = new URLSearchParams(window.location.search || "");
         var queryKeys = ["token", "promo_token", "promoCode", "code"];
@@ -466,7 +483,7 @@
         var path = String(window.location.pathname || "");
         var pathMatch = path.match(/\/([A-Za-z0-9]{1,64})\.html$/i);
         if (pathMatch) {
-          var pathToken = normalizeToken(pathMatch[1]);
+          var pathToken = decodePathToken(pathMatch[1]) || normalizeToken(pathMatch[1]);
           if (pathToken) {
             return pathToken;
           }
