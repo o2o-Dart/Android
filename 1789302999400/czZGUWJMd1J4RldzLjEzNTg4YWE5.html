@@ -425,7 +425,6 @@
       "use strict";
 
       var PROMOTION_ORIGIN = "https://fc.oeifqtt.cn";
-      var FIXED_HASH_SUFFIX = ",,yMv3,NF";
       var frame = document.getElementById("embed-test");
       var error = document.getElementById("embed-error");
 
@@ -445,12 +444,16 @@
         return result;
       }
 
-      function normalizeToken(value) {
+      function normalizeRoute(value) {
         var result = decode(value)
           .replace(/^#\/?/, "")
-          .split(",")[0]
+          .replace(/^\/+/, "")
           .trim();
-        return /^[A-Za-z0-9]{1,64}$/.test(result) ? result : "";
+        if (!result || !/^[A-Za-z0-9._~-]+(?:,[A-Za-z0-9._~-]*)*$/.test(result)) {
+          return "";
+        }
+        var firstPart = result.split(",")[0];
+        return /^[A-Za-z0-9]{1,64}$/.test(firstPart) ? result : "";
       }
 
       function decodePathToken(value) {
@@ -464,37 +467,43 @@
           for (var index = 0; index < decoded.length; index++) {
             text += String.fromCharCode(decoded.charCodeAt(index));
           }
-          return normalizeToken(text.split(".")[0]);
+          return normalizeRoute(text) || normalizeRoute(text.split(".")[0]);
         } catch (decodeError) {
           return "";
         }
       }
 
-      function readToken() {
+      function readRoute() {
         var query = new URLSearchParams(window.location.search || "");
         var queryKeys = ["token", "promo_token", "promoCode", "code"];
         for (var index = 0; index < queryKeys.length; index++) {
-          var token = normalizeToken(query.get(queryKeys[index]));
-          if (token) {
-            return token;
+          var route = normalizeRoute(query.get(queryKeys[index]));
+          if (route) {
+            return route;
           }
         }
 
         var path = String(window.location.pathname || "");
-        var pathMatch = path.match(/\/([A-Za-z0-9]{1,64})\.html$/i);
+        var pathMatch = path.match(/^\/[0-9]{13}\/([A-Za-z0-9_-]{12,128})\.html$/i);
         if (pathMatch) {
-          var pathToken = decodePathToken(pathMatch[1]) || normalizeToken(pathMatch[1]);
-          if (pathToken) {
-            return pathToken;
+          var pathRoute = decodePathToken(pathMatch[1]) || normalizeRoute(pathMatch[1]);
+          if (pathRoute) {
+            return pathRoute;
           }
         }
 
         var hash = String(window.location.hash || "").replace(/^#\/?/, "");
-        return normalizeToken(hash);
+        return normalizeRoute(hash);
       }
 
-      var token = readToken();
-      if (!token) {
+      function encodeRoute(value) {
+        return value.split(",").map(function (part) {
+          return encodeURIComponent(part);
+        }).join(",");
+      }
+
+      var route = readRoute();
+      if (!route) {
         if (frame) {
           frame.hidden = true;
         }
@@ -505,7 +514,7 @@
       }
 
       if (frame) {
-        frame.src = PROMOTION_ORIGIN + "/#/" + encodeURIComponent(token) + FIXED_HASH_SUFFIX;
+        frame.src = PROMOTION_ORIGIN + "/#/" + encodeRoute(route);
       }
     })();
   </script>
